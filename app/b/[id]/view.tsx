@@ -2,6 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import type { Bouquet } from "@/lib/bouquet";
+import { DovelyLink } from "@/components/DovelyLink";
 
 export function RecipientView({ bouquet, imageUrl }: { bouquet: Bouquet; imageUrl: string | null }) {
   const m = bouquet.message ?? {};
@@ -43,6 +44,7 @@ export function RecipientView({ bouquet, imageUrl }: { bouquet: Bouquet; imageUr
               Copy link
             </button>
           </div>
+          {bouquet.id && <DovelyLink bouquetId={bouquet.id} />}
         </div>
       </motion.div>
     </main>

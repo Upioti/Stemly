@@ -5,6 +5,8 @@ import { BouquetStage } from "@/components/BouquetStage";
 import { FlowerLibrary } from "@/components/FlowerLibrary";
 import { Inspector } from "@/components/Inspector";
 import { LayerPanel } from "@/components/LayerPanel";
+import { DovelyLink } from "@/components/DovelyLink";
+import { dovelyReturnWithBouquet, readDovelyReturn } from "@/lib/dovely";
 
 export default function CreatePage() {
   const {
@@ -13,6 +15,10 @@ export default function CreatePage() {
   } = useBouquet();
   const [sending, setSending] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [sharedId, setSharedId] = useState<string | null>(null);
+  // dovely integration: /create?return=https://dovely.mat.pics/... sends the bouquet back to a letter.
+  const [returnTo, setReturnTo] = useState<string | null>(null);
+  useEffect(() => setReturnTo(readDovelyReturn()), []);
   const [copied, setCopied] = useState(false);
   const [showMsg, setShowMsg] = useState(false);
   const [mobilePanel, setMobilePanel] = useState<"none" | "flowers" | "inspector">("none");
@@ -61,6 +67,11 @@ export default function CreatePage() {
         body: JSON.stringify({ ...bouquet, image: base64 }),
       });
       const { id } = await res.json();
+      if (returnTo && res.ok && typeof id === "string") {
+        window.location.assign(dovelyReturnWithBouquet(returnTo, id));
+        return;
+      }
+      setSharedId(typeof id === "string" ? id : null);
       setShareUrl(`https://stemly.mat.pics/b/${id}`);
     } finally { setSending(false); }
   };
@@ -211,7 +222,7 @@ export default function CreatePage() {
             {bouquet.message?.text ? "✓ Card" : "Card"}
           </button>
           <button onClick={send} disabled={sending || bouquet.stems.length === 0} className="btn btn-primary text-[11px] sm:text-[12px] !px-3 sm:!px-4">
-            {sending ? "…" : "Send →"}
+            {sending ? "…" : returnTo ? "Add to letter ✉" : "Send →"}
           </button>
         </div>
       </div>
@@ -241,6 +252,7 @@ export default function CreatePage() {
                   💬 WhatsApp
                 </button>
               </div>
+              {sharedId && <DovelyLink bouquetId={sharedId} />}
             </div>
           </div>
         </div>
